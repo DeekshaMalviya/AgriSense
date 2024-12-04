@@ -1,0 +1,67 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String
+  name          String
+  role          UserRole
+  region        String
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  crops         Crop[]    // For farmers
+  orders        Order[]   // For buyers
+  rating        Float     @default(0)
+}
+
+model Crop {
+  id               String   @id @default(cuid())
+  name             String
+  type             String
+  basePrice        Float
+  quantity         Float
+  unit             String
+  region           String
+  farmerId         String
+  farmer           User     @relation(fields: [farmerId], references: [id])
+  sustainabilityScore Float
+  imageUrl         String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  orders           Order[]
+}
+
+model Order {
+  id          String   @id @default(cuid())
+  cropId      String
+  buyerId     String
+  quantity    Float
+  totalPrice  Float
+  status      OrderStatus
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  crop        Crop     @relation(fields: [cropId], references: [id])
+  buyer       User     @relation(fields: [buyerId], references: [id])
+}
+
+enum UserRole {
+  FARMER
+  BUYER
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  PAID
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
